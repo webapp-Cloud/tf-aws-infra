@@ -1,0 +1,43 @@
+name: Terraform Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.9.0
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Run Terraform Format
+        id: fmt
+        run: |
+          terraform fmt -check -recursive
+
+      - name: Run Terraform Validate
+        id: validate
+        run: terraform validate
+
+      - name: Check Format Result
+        if: steps.fmt.outcome == 'failure'
+        run: |
+          echo "Terraform fmt failed. Please run 'terraform fmt' to fix formatting issues."
+          exit 1
+
+      - name: Check Validation Result
+        if: steps.validate.outcome == 'failure'
+        run: |
+          echo "Terraform validate failed. Please fix the issues."
+          exit 1
